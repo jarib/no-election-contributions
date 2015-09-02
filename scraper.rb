@@ -1,7 +1,6 @@
 require 'scraperwiki'
 require 'open-uri'
 require 'nokogiri'
-require 'pry'
 
 doc = Nokogiri::HTML.parse(open("http://www.partifinansiering.no/a/vkb2015/index.html").read)
 
