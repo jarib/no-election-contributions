@@ -32,6 +32,7 @@ doc.css('h2, h4, table').each do |node|
         :contributor_amount  => Integer(amount.gsub(" ", ""))
       }
 
+      p data
       ScraperWiki.save_sqlite [:party, :organization, :contributor_name], data
     end
   end  
