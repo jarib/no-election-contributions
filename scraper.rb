@@ -1,39 +1,44 @@
 require 'scraperwiki'
-require 'open-uri'
 require 'nokogiri'
 require 'pry'
 require 'fileutils'
 
 FileUtils.rm_rf 'data.sqlite'
-doc = Nokogiri::HTML.parse(open("http://www.partifinansiering.no/a/vkb2015/index.html").read)
 
-party = nil
-organization = nil
+def scrape(id, url)
+  doc = Nokogiri::HTML.parse(ScraperWiki.scrape(url))
 
-doc.css('h2, h4, table').each do |node|
-  case node.name
-  when 'h2'
-    party = node.text.split("/").first
-  when 'h4'
-    organization = node.text.split("/").first
-  when 'table'
-    rows = node.css('tr')[1..-1]
+  party = nil
+  organization = nil
 
-    rows.each do |row|
-      type, name, address, amount = row.css('td').map(&:text)
+  doc.css('h2, h4, table').each do |node|
+    case node.name
+    when 'h2'
+      party = node.text.split("/").first
+    when 'h4'
+      organization = node.text.split("/").first
+    when 'table'
+      rows = node.css('tr')[1..-1]
 
-      data = {
-        :party               => party,
-        :organization        => organization,
-        :type                => "vkb2015",
-        :contributor_type    => type.split("/").first,
-        :contributor_name    => name,
-        :contributor_address => address,
-        :contributor_amount  => Integer(amount.gsub(" ", ""))
-      }
+      rows.each do |row|
+        type, name, address, amount = row.css('td').map(&:text)
 
-      p data
-      ScraperWiki.save_sqlite [:party, :organization, :contributor_name], data
+        data = {
+          :party               => party,
+          :organization        => organization,
+          :type                => id,
+          :contributor_type    => type.split("/").first,
+          :contributor_name    => name,
+          :contributor_address => address,
+          :contributor_amount  => Integer(amount.gsub(" ", ""))
+        }
+
+        # p data
+        ScraperWiki.save_sqlite [:party, :organization, :type, :contributor_name], data
+      end
     end
-  end  
+  end
 end
+
+scrape "vkb2015", "https://www.partifinansiering.no/a/vkb2015/index.html"
+scrape "vkb2017", "https://www.partifinansiering.no/a/vkb2017/index.html"
